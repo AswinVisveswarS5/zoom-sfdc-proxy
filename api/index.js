@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export default async function handler(req, res) {
-  const targetURL = process.env.SALESFORCE_ENDPOINT;
+  const targetURL = 'https://orgfarm-6f123a62a3-dev-ed.develop.my.salesforce-sites.com/services/apexrest/ZoomWebhook/';
 
   if (!targetURL) {
     return res.status(500).send("SALESFORCE_ENDPOINT is not configured.");
