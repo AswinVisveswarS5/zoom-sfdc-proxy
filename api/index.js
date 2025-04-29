@@ -1,29 +1,35 @@
-const axios = require("axios");
+import axios from 'axios';
 
 export default async function handler(req, res) {
   const targetURL = process.env.SALESFORCE_ENDPOINT;
 
   if (!targetURL) {
-    return res.status(500).send("Salesforce endpoint not configured.");
+    return res.status(500).send("SALESFORCE_ENDPOINT is not configured.");
   }
 
   try {
-    const forwardRes = await axios({
-      method: req.method,
-      url: targetURL,
-      headers: {
-        "Content-Type": req.headers["content-type"] || "application/json"
-      },
-      data: req.body,
-      validateStatus: false // So we can forward even non-200
-    });
+    const method = req.method;
+    const headers = {
+      'Content-Type': req.headers['content-type'] || 'application/json'
+    };
 
-    res
-      .status(forwardRes.status)
-      .send(`Forwarded to Salesforce: ${forwardRes.status}`);
-  } catch (err) {
-    console.error("Forwarding error:", err);
-    console.log("Forcing redeploy...");
-    res.status(500).send("Failed to forward to Salesforce");
+    let response;
+
+    if (method === 'POST') {
+      // Ensure body is parsed correctly
+      const body =
+        typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}');
+
+      response = await axios.post(targetURL, body, { headers });
+    } else if (method === 'GET') {
+      response = await axios.get(targetURL, { headers });
+    } else {
+      return res.status(405).send('Method Not Allowed');
+    }
+
+    return res.status(response.status).send(`Forwarded to Salesforce: ${response.status}`);
+  } catch (error) {
+    console.error('❌ Proxy error:', error.message);
+    return res.status(500).send('Failed to forward to Salesforce');
   }
 }
