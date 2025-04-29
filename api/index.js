@@ -1,35 +1,23 @@
-import axios from 'axios';
+const axios = require('axios');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const targetURL = 'https://orgfarm-6f123a62a3-dev-ed.develop.my.salesforce-sites.com/services/apexrest/ZoomWebhook/';
 
-  if (!targetURL) {
-    return res.status(500).send("SALESFORCE_ENDPOINT is not configured.");
-  }
-
   try {
-    const method = req.method;
-    const headers = {
-      'Content-Type': req.headers['content-type'] || 'application/json'
-    };
+    const response = await axios({
+      method: req.method,
+      url: targetURL,
+      headers: {
+        'Content-Type': req.headers['content-type'] || 'application/json',
+      },
+      data: req.method === 'POST' ? req.body : undefined,
+      validateStatus: false // allows handling 4xx/5xx
+    });
 
-    let response;
-
-    if (method === 'POST') {
-      // Ensure body is parsed correctly
-      const body =
-        typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}');
-
-      response = await axios.post(targetURL, body, { headers });
-    } else if (method === 'GET') {
-      response = await axios.get(targetURL, { headers });
-    } else {
-      return res.status(405).send('Method Not Allowed');
-    }
-
-    return res.status(response.status).send(`Forwarded to Salesforce: ${response.status}`);
+    console.log('✅ Forwarded successfully:', response.status);
+    res.status(response.status).send(`Forwarded to Salesforce: ${response.status}`);
   } catch (error) {
-    console.error('❌ Proxy error:', error.message);
-    return res.status(500).send('Failed to forward to Salesforce');
+    console.error('❌ Proxy forwarding failed:', error.message);
+    res.status(500).send('Failed to forward to Salesforce');
   }
-}
+};
