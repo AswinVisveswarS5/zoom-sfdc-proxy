@@ -23,6 +23,7 @@ export default async function handler(req, res) {
       .send(`Forwarded to Salesforce: ${forwardRes.status}`);
   } catch (err) {
     console.error("Forwarding error:", err);
+    console.log("Forcing redeploy...");
     res.status(500).send("Failed to forward to Salesforce");
   }
 }
