@@ -1,12 +1,14 @@
+const axios = require('axios');
+
 module.exports = async function handler(req, res) {
-  console.log('Zoom validation request received');
-  
-  // Always immediately respond 200 OK for GET (Zoom Validation)
-  if (req.method === 'GET') {
-    return res.status(200).send('Zoom validation OK');
+  // Check for Zoom's challenge request (GET with 'challenge' query param)
+  if (req.method === 'GET' && req.query.challenge) {
+    console.log('Zoom CRC challenge received:', req.query.challenge);
+
+    // Respond with the challenge token in a JSON body
+    return res.status(200).json({ challenge: req.query.challenge });
   }
 
-  const axios = require('axios');
   const targetURL = 'https://orgfarm-6f123a62a3-dev-ed.develop.my.salesforce-sites.com/services/apexrest/ZoomWebhook/';
 
   try {
